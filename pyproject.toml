@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "nss-api"
+version = "0.1.0"
+description = "API backend for the app of NSS MITBLR Unit"
+authors = ["Alphaspiderman <68412330+Alphaspiderman@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
