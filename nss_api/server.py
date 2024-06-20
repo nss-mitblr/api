@@ -69,6 +69,38 @@ async def setup_app(app: Sanic):
         logger.info("Connected to DEV ENV")
         app.ctx.db = client["nss-api-dev"]
 
+    app.ctx.tokens = {}
+
+    logger.info("Fetching OpenID Configuration of Entra")
+
+    # Fetch OpenID Configuration of Entra from https://login.microsoftonline.com/common/.well-known/openid-configuration
+    async with aiohttp.ClientSession() as session:
+        async with session.get(
+            "https://login.microsoftonline.com/common/.well-known/openid-configuration"
+        ) as resp:
+            config = await resp.json()
+            jwks_uri = config["jwks_uri"]
+
+    logger.info(
+        "Fetching JSON Web Key Set (JWKS) from the OpenID Configuration of Entra"
+    )
+
+    # Fetch the JSON Web Key Set (JWKS) from the OpenID Configuration of Entra
+    async with aiohttp.ClientSession() as session:
+        async with session.get(jwks_uri) as resp:
+            jwks = await resp.json()
+
+    logger.info("Saving public keys from the JWKS")
+
+    # Create a dictionary of public keys from the JWKS
+    public_keys = {}
+    for jwk in jwks["keys"]:
+        kid = jwk["kid"]
+        public_keys[kid] = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+
+    logger.info("Saving public keys to the app context")
+    app.ctx.public_keys = public_keys
+
     logger.info("Setup complete.")
 
 
