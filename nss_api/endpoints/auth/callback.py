@@ -5,11 +5,12 @@ from sanic import Request, json
 from sanic.log import logger
 from sanic.views import HTTPMethodView
 
-import nss_api.utils as utils
+from nss_api.app import NSS_API
 
 
 class ExternalAuthCallback(HTTPMethodView):
     async def post(self, request: Request):
+        app: NSS_API = request.app
         # Get the token from the request.
         form = request.form
         token = form["id_token"][0]
@@ -18,7 +19,7 @@ class ExternalAuthCallback(HTTPMethodView):
         kid = jwt.get_unverified_header(token)["kid"]
 
         # Get the public key to verify the token.
-        key = request.app.ctx.public_keys[kid]
+        key = app.get_entra_jwt_keys()[kid]
 
         try:
             # Decode the token.
@@ -102,13 +103,12 @@ class ExternalAuthCallback(HTTPMethodView):
             payload = {
                 "name": decoded["name"],
                 "email": decoded["email"],
+                "jwt_type": "faculty",
             }
             # Calculate Validity of JWT
             valitidy = 7 * 24 * 60
             # Generate JWT
-            token = await utils.generate_jwt(
-                request.app, payload, validity=valitidy, target="faculty"
-            )
+            token = await app.generate_jwt(payload, validity=valitidy)
             # Return JWT
             return json(
                 {
@@ -130,11 +130,14 @@ class ExternalAuthCallback(HTTPMethodView):
             # Generate a temp JWT for signups
             payload = {
                 "email": email,
+                "jwt_type": "signup",
             }
 
             # Generate JWT for signup
-            token = await utils.generate_jwt(
-                request.app, payload, validity=30, target="signup"
+            token = await app.generate_jwt(
+                request.app,
+                payload,
+                validity=30,
             )
 
             # Redirect to signup
@@ -161,15 +164,14 @@ class ExternalAuthCallback(HTTPMethodView):
                 "name": student["name"],
                 "email": student["email"],
                 "registeration_number": student["registeration_number"],
+                "jwt_type": "student",
             }
 
             # Calculate Validity of JWT
             valitidy = 30 * 24 * 60
 
             # Generate JWT
-            token = await utils.generate_jwt(
-                request.app, payload, validity=valitidy, target="student"
-            )
+            token = await app.generate_jwt(request.app, payload, validity=valitidy)
 
             # Return JWT
             return json(
