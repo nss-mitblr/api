@@ -23,6 +23,26 @@ is_prod: str = config.get("IS_PROD", "false")
 # Convert the string to a bool and update the config with the bool.
 config.update({"IS_PROD": is_prod.lower() == "true"})
 
+# Load default values for the database connection
+config.update(
+    {
+        "DB_HOST": config.get("DB_HOST", "localhost"),
+        "DB_PORT": int(config.get("DB_PORT", 3306)),
+        "DB_USERNAME": config.get("DB_USERNAME", "root"),
+        "DB_PASSWORD": config.get("DB_PASSWORD", "password"),
+        "DB_NAME": config.get("DB_NAME", "nss"),
+    },
+)
+
+# Check if AZURE_AD env variables are set
+if (
+    config.get("AZURE_AD_TENANT_ID") is None
+    or config.get("AZURE_AD_CLIENT_ID") is None
+    or config.get("AZURE_AD_REDIRECT_URI") is None
+):
+    logger.error("MISSING AZURE AD ENV VARIABLES")
+    quit(1)
+
 app: NSS_API = appserver
 app.config.update(config)
 app.config.PROXIES_COUNT = int(config.get("PROXIES_COUNT", 0))
