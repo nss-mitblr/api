@@ -5,7 +5,7 @@ from nss_api.app import NSS_API
 from nss_api.models.internal.jwt_status import JWTStatus
 
 
-def require_login(is_api: bool = False):
+def require_login():
     def decorator(f):
         async def decorated_function(*args, **kwargs):
             # Check if the first argument is a view or a request
@@ -23,10 +23,7 @@ def require_login(is_api: bool = False):
                 # Call the function if the request is authorized
                 return await f(*args, **kwargs)
             else:
-                if is_api:
-                    return response.json({"error": "Unauthorized access"}, status=401)
-                else:
-                    return response.redirect("/login")
+                return response.json({"error": "Unauthorized access"}, status=401)
 
         return decorated_function
 
