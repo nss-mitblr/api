@@ -19,7 +19,7 @@ class ExternalAuthCallback(HTTPMethodView):
         kid = jwt.get_unverified_header(token)["kid"]
 
         # Get the public key to verify the token.
-        key = app.get_entra_jwt_keys()[kid]
+        key = app.get_entra_jwt_keys().get(kid, "")
 
         try:
             # Decode the token.
