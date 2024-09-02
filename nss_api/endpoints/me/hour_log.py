@@ -19,7 +19,7 @@ class My_Hour_Log(HTTPMethodView):
                     "SELECT * FROM volunteer_hours_log WHERE email = %s;",
                     (user_id,),
                 )
-                data = await cur.fetchone()
+                data = await cur.fetchall()
                 logs = [Volunteer_Log(log) for log in data]
         return json({"data": [log.to_dict() for log in logs]})
 
@@ -37,7 +37,7 @@ class My_Hour_Log(HTTPMethodView):
                     "SELECT * FROM volunteer_hours_log WHERE email = %s;",
                     (user_id,),
                 )
-                data = await cur.fetchone()
+                data = await cur.fetchall()
                 logs = [Volunteer_Log(log) for log in data]
                 hours = sum(log.hours for log in logs)
                 await cur.execute(
