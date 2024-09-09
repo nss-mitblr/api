@@ -17,7 +17,7 @@ class Event_History(HTTPMethodView):
         async with db_pool.connection() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    f"SELECT * FROM events ORDER BY date DESC LIMIT 10 OFFSET {offset}"
+                    f"SELECT * FROM Events ORDER BY date DESC LIMIT 10 OFFSET {offset}"
                 )
                 res = await cur.fetchall()
         return json({"events": [Event(e).to_dict() for e in res]})

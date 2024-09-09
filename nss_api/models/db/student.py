@@ -1,6 +1,6 @@
 class Student:
     fields = [
-        "NSS_ID",
+        "nss_id",
         "learner_id",
         "name",
         "reg_no",

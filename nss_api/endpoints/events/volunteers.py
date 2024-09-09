@@ -20,7 +20,7 @@ class Event_Volunteers(HTTPMethodView):
         async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT s.learner_id, s.name, s.reg_no FROM volunteer_hours_log NATURAL JOIN users s WHERE event_id = %s LIMIT 10 OFFSET %s;",  # noqa: E501
+                    "SELECT learner_id, name, reg_no FROM Log NATURAL JOIN Members WHERE event_id = %s LIMIT 10 OFFSET %s;",  # noqa: E501
                     (event_id, offset),
                 )
                 data = await cur.fetchall()

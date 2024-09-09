@@ -16,7 +16,7 @@ class My_Hour_Log(HTTPMethodView):
         async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT * FROM volunteer_hours_log WHERE email = %s;",
+                    "SELECT * FROM Log WHERE email = %s;",
                     (user_id,),
                 )
                 data = await cur.fetchall()
@@ -34,14 +34,14 @@ class My_Hour_Log(HTTPMethodView):
         async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT * FROM volunteer_hours_log WHERE email = %s;",
+                    "SELECT * FROM Log WHERE email = %s;",
                     (user_id,),
                 )
                 data = await cur.fetchall()
                 logs = [Volunteer_Log(log) for log in data]
                 hours = sum(log.hours for log in logs)
                 await cur.execute(
-                    "UPDATE users SET hours = %s WHERE email = %s;",
+                    "UPDATE Members SET hours = %s WHERE email = %s;",
                     (hours, user_id),
                 )
         return json({"data": "Hours updated."})

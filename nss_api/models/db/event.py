@@ -2,8 +2,8 @@ class Event:
     fields = [
         "event_id",
         "event_name",
-        "date",
-        "start_time",
+        "event_date",
+        "event_time",
         "venue",
         "hours",
     ]

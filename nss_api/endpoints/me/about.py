@@ -16,7 +16,7 @@ class About_Me(HTTPMethodView):
         async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
-                    "SELECT * FROM users WHERE email = %s;",
+                    "SELECT * FROM Members WHERE email = %s;",
                     (user_id,),
                 )
                 user = await cur.fetchone()

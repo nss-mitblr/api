@@ -1,7 +1,7 @@
 class Volunteer_Log:
     fields = [
         "event_id",
-        "volunteer_id",
+        "learner_id",
         "hours",
         "reason",
     ]

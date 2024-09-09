@@ -15,7 +15,7 @@ class Event_Register(HTTPMethodView):
             async with conn.cursor() as cur:
                 # Check if event exists
                 await cur.execute(
-                    "SELECT * FROM events WHERE event_id = %s", (data["event_id"],)
+                    "SELECT * FROM Events WHERE event_id = %s", (data["event_id"],)
                 )
                 res = await cur.fetchone()
                 if not res:
@@ -24,12 +24,13 @@ class Event_Register(HTTPMethodView):
                     )
                 # Register student for event.
                 await cur.execute(
-                    "INSERT INTO volunteer_hours_log (event_id, volunteer_id, hours, reason) VALUES (%s, %s, %s, %s)",  # noqa: E501
+                    "INSERT INTO Log (event_id, learner_id, hours, reason,type) VALUES (%s, %s, %s, %s, %s)",  # noqa: E501
                     (
                         data["event_id"],
                         user_id,
                         0,
                         "Registered for event.",
+                        "event"
                     ),
                 )
         return json({"success": True})
