@@ -13,14 +13,24 @@ class Event_Volunteers(HTTPMethodView):
             return json({"error": "Event ID is required."}, status=400)
         page = request.args.get("page")
         if page:
-            offset = 10 * int(page)
+            offset = 20 * int(page)
         else:
             offset = 0
         # Get user data from the database
         async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
+                # Check if event exists and fetch its name
                 await cur.execute(
-                    "SELECT learner_id, name, reg_no FROM Log NATURAL JOIN Members WHERE event_id = %s LIMIT 10 OFFSET %s;",  # noqa: E501
+                    "SELECT 1 FROM Events WHERE event_id = %s", (event_id,)
+                )
+                res = await cur.fetchone()
+                if not res:
+                    return json(
+                        {"success": False, "error": "Event does not exist."}, status=404
+                    )
+                # Fetch volunteers
+                await cur.execute(
+                    "SELECT learner_id, name, reg_no FROM Registerations NATURAL JOIN Members m NATURAL JOIN Events e WHERE event_id = %s LIMIT 10 OFFSET %s;",  # noqa: E501
                     (event_id, offset),
                 )
                 data = await cur.fetchall()
