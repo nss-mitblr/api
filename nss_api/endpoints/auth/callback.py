@@ -1,4 +1,5 @@
 """API endpoints for callbacks from external (MS-Entra) authentication provider."""
+
 import jwt
 
 from sanic import Request, json
@@ -6,6 +7,7 @@ from sanic.log import logger
 from sanic.views import HTTPMethodView
 
 from nss_api.app import NSS_API
+from nss_api.models.db.student import Student
 
 
 class ExternalAuthCallback(HTTPMethodView):
@@ -117,14 +119,15 @@ class ExternalAuthCallback(HTTPMethodView):
                 },
                 status=200,
             )
-
-        # Covert to interal UUID
-        uuid = email.split("@")[0]
-
         # Get student from database
-        collection = request.app.ctx.db["students"]
-
-        student = await collection.find_one({"email": uuid})
+        db = app.get_db_pool()
+        async with db.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(
+                    "SELECT * FROM Members WHERE learner_id = %s",
+                    (email,),
+                )
+                student = await cur.fetchone()
 
         if student is None:
             # Generate a temp JWT for signups
@@ -135,7 +138,6 @@ class ExternalAuthCallback(HTTPMethodView):
 
             # Generate JWT for signup
             token = await app.generate_jwt(
-                request.app,
                 payload,
                 validity=30,
             )
@@ -159,11 +161,12 @@ class ExternalAuthCallback(HTTPMethodView):
             # )
         else:
             # Student found
+            student = Student(student)
             # Generate JWT
             payload = {
-                "name": student["name"],
-                "email": student["email"],
-                "registeration_number": student["registeration_number"],
+                "name": student.name,
+                "email": student.learner_id,
+                "registeration_number": student.reg_no,
                 "jwt_type": "student",
             }
 
@@ -171,7 +174,7 @@ class ExternalAuthCallback(HTTPMethodView):
             valitidy = 30 * 24 * 60
 
             # Generate JWT
-            token = await app.generate_jwt(request.app, payload, validity=valitidy)
+            token = await app.generate_jwt(payload, validity=valitidy)
 
             # Return JWT
             return json(
