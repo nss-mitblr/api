@@ -12,8 +12,7 @@ class Event_Manage(HTTPMethodView):
         app: NSS_API = request.app
         data = request.json
         db_pool = app.get_db_pool()
-
-        async with db_pool.connection() as conn:
+        async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 # Function to generate a random 10-digit string ID
                 def generate_random_event_id():
@@ -50,12 +49,25 @@ class Event_Manage(HTTPMethodView):
         """Delete an event."""
         app: NSS_API = request.app
         data = request.json
+        event_id = data.get("event_id")
+        # Check if event_id is provided
+        if not event_id:
+            return json(
+                {"success": False, "error": "Event ID is required."}, status=400
+            )
         db_pool = app.get_db_pool()
-        async with db_pool.connection() as conn:
+        async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
+                # Delete Logs
                 await cur.execute(
-                    "DELETE FROM Events WHERE event_id = %s", (data["event_id"],)
+                    "DELETE FROM Logs WHERE type = event AND actor_id = %s", (event_id,)
                 )
+                # Delete Registerations
+                await cur.execute(
+                    "DELETE FROM Registerations WHERE event_id = %s", (event_id,)
+                )
+                # Delete Event
+                await cur.execute("DELETE FROM Events WHERE event_id = %s", (event_id,))
         return json({"success": True})
 
     async def put(self, request: Request):
@@ -63,7 +75,7 @@ class Event_Manage(HTTPMethodView):
         app: NSS_API = request.app
         data = request.json
         db_pool = app.get_db_pool()
-        async with db_pool.connection() as conn:
+        async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 # Check if event exists
                 await cur.execute(
