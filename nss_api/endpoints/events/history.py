@@ -14,7 +14,7 @@ class Event_History(HTTPMethodView):
         else:
             offset = 0
         db_pool = app.get_db_pool()
-        async with db_pool.connection() as conn:
+        async with db_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(
                     f"SELECT * FROM Events ORDER BY date DESC LIMIT 10 OFFSET {offset}"

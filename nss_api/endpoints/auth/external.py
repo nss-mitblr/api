@@ -5,7 +5,7 @@ from sanic.response import redirect, json
 from sanic.views import HTTPMethodView
 
 
-class Login_Root(HTTPMethodView):
+class ExternalAuth(HTTPMethodView):
     template = (
         "https://login.microsoftonline.com/%(tenant)s/oauth2/v2.0/authorize?client_id=%(client_id)s"
         "&response_type=id_token "

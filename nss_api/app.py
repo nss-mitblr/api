@@ -70,6 +70,7 @@ class NSS_API(Sanic):
         return self.ctx.db_pool
 
     def decode_jwt(self, jwt_token: str) -> dict:
+        assert isinstance(jwt_token, str)
         return jwt.decode(jwt_token, key=self.config["PUB_KEY"], algorithms="RS256")
 
     def check_server_jwt(self, jwt_token: str) -> JWTStatus:
@@ -110,6 +111,7 @@ class NSS_API(Sanic):
             # Attempt to get Host from config
             host = self.config["HOST"]
         except KeyError:
+            logger.error("Host not found in configw")
             # Unable to get Host from config, Quit app due to required field
             self.stop()
 
