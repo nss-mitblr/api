@@ -166,7 +166,7 @@ class ExternalAuthCallback(HTTPMethodView):
             payload = {
                 "name": student.name,
                 "email": student.learner_id,
-                "registeration_number": student.reg_no,
+                "uuid": student.reg_no,
                 "jwt_type": "student",
             }
 

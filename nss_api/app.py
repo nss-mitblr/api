@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Optional, Tuple
 import aiohttp
 import aiomysql
 from sanic import Sanic
@@ -7,6 +8,7 @@ import jwt
 import json
 
 from nss_api.models.internal.jwt_status import JWTStatus
+from nss_api.models.internal.jwt_data import JWT_Data
 
 
 class NSS_API(Sanic):
@@ -71,13 +73,18 @@ class NSS_API(Sanic):
 
     def decode_jwt(self, jwt_token: str) -> dict:
         assert isinstance(jwt_token, str)
-        return jwt.decode(jwt_token, key=self.config["PUB_KEY"], algorithms="RS256")
+        data = JWT_Data(
+            **jwt.decode(jwt_token, key=self.config["PUB_KEY"], algorithms="RS256")
+        )
+        return data
 
-    def check_server_jwt(self, jwt_token: str) -> JWTStatus:
+    def check_server_jwt(
+        self, jwt_token: str, provide_data: bool = False
+    ) -> Tuple[JWTStatus, Optional[JWT_Data]]:
         if not jwt_token or jwt_token == "":
             return JWTStatus(authenticated=False, message="JWT Token not provided")
         try:
-            self.decode_jwt(jwt_token)
+            jwt_data = self.decode_jwt(jwt_token)
         except jwt.exceptions.ImmatureSignatureError:
             # Raised when a token’s nbf claim represents a time in the future
             d = JWTStatus(
@@ -96,7 +103,9 @@ class NSS_API(Sanic):
             # Valid Token
             d = JWTStatus(authenticated=True)
 
-        return d
+        if provide_data:
+            return d, jwt_data
+        return d, None
 
     async def generate_jwt(
         self,
