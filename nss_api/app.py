@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
 import aiohttp
 import aiomysql
 from sanic import Sanic
@@ -71,16 +70,14 @@ class NSS_API(Sanic):
     def get_db_pool(self):
         return self.ctx.db_pool
 
-    def decode_jwt(self, jwt_token: str) -> dict:
+    def decode_jwt(self, jwt_token: str) -> JWT_Data:
         assert isinstance(jwt_token, str)
         data = JWT_Data(
             **jwt.decode(jwt_token, key=self.config["PUB_KEY"], algorithms="RS256")
         )
         return data
 
-    def check_server_jwt(
-        self, jwt_token: str, provide_data: bool = False
-    ) -> Tuple[JWTStatus, Optional[JWT_Data]]:
+    def check_server_jwt(self, jwt_token: str) -> JWTStatus:
         if not jwt_token or jwt_token == "":
             return JWTStatus(authenticated=False, message="JWT Token not provided")
         try:
@@ -101,11 +98,9 @@ class NSS_API(Sanic):
             d = JWTStatus(authenticated=False, message="JWT Token is invalid")
         else:
             # Valid Token
-            d = JWTStatus(authenticated=True)
+            d = JWTStatus(authenticated=True, JWT_Data=jwt_data)
 
-        if provide_data:
-            return d, jwt_data
-        return d, None
+        return d
 
     async def generate_jwt(
         self,
